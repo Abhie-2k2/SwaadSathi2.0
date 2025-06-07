@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Barcode Scanner</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+</head>
+<body>
+    <h2>Scan a Barcode</h2>
+    <div id="scanner-container" style="width: 400px; height: 300px;"></div>
+    <p id="barcode-result">Waiting for scan...</p>
+    <button id="restart-btn" style="display:none;">Restart Scan</button>
+
+    <script>
+        function postToBackend(barcode) {
+            fetch("http://localhost:8000/api/image/barcode-scan/", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ barcode: barcode })
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Product not found or API error");
+                return response.json();
+            })
+            .then(data => {
+                console.log("Response from backend:", data);
+                document.getElementById("barcode-result").innerText = JSON.stringify(data, null, 2);
+                document.getElementById("restart-btn").style.display = "inline-block";
+            })
+            .catch(err => {
+                console.error("Error:", err);
+                document.getElementById("barcode-result").innerText = "Failed to fetch data: " + err.message;
+                document.getElementById("restart-btn").style.display = "inline-block";
+            });
+        }
+
+        function startScanner() {
+            document.getElementById("barcode-result").innerText = "Waiting for scan...";
+            document.getElementById("restart-btn").style.display = "none";
+
+            Quagga.init({
+                inputStream: {
+                    name: "Live",
+                    type: "LiveStream",
+                    target: document.querySelector('#scanner-container'),
+                    constraints: {
+                        width: 400,
+                        height: 300,
+                        facingMode: "environment"
+                    }
+                },
+                decoder: {
+                    readers: ["ean_reader", "upc_reader"]
+                }
+            }, function(err) {
+                if (err) {
+                    console.error(err);
+                    document.getElementById("barcode-result").innerText = "Error initializing scanner: " + err.message;
+                    return;
+                }
+                Quagga.start();
+            });
+        }
+
+        Quagga.onDetected(function(data) {
+            const code = data.codeResult.code;
+            document.getElementById("barcode-result").innerText = `Scanned Barcode: ${code}`;
+            Quagga.stop();
+            postToBackend(code);
+        });
+
+        document.getElementById("restart-btn").addEventListener("click", function() {
+            startScanner();
+        });
+
+        // Start scanner on page load
+        startScanner();
+    </script>
+</body>
+</html>

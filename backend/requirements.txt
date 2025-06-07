@@ -1,0 +1,12 @@
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+pymongo==4.7.1
+python-dotenv==1.0.1
+firebase-admin==6.5.0
+python-multipart==0.0.9   # only if you later accept file uploads
+bson==0.5.10              # ObjectId helper for Pydantic <2
+motor>=3.1.1
+google-generativeai>=0.3.2
+opencv-python
+pillow
+pyzbar
