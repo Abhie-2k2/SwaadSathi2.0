@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="overlay">
+  <section class="section">
+    <h1 class="section-title">Add a New Recipe</h1>
+    <form id="recipeForm" class="form-card" enctype="multipart/form-data">
+      <input type="text" name="name" placeholder="Recipe Name" required />
+      
+      <input type="text" name="ingredients" placeholder="Ingredients (comma-separated)" required />
+      
+      <textarea name="method" rows="6" placeholder="Preparation Method" required></textarea>
+      
+      <label class="upload-label" for="imageInput">Upload Image</label>
+      <input id="imageInput" type="file" name="image" accept="image/*" required />
+
+      <button type="submit">Add Recipe</button>
+      <p id="responseMsg" class="response-msg"></p>
+    </form>
+  </section>
+</div>
+
+<script>
+  const form = document.getElementById('recipeForm');
+  const responseMsg = document.getElementById('responseMsg');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+
+    try {
+      const res = await fetch('/recipes/add', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      responseMsg.textContent = data.message || "Recipe added successfully!";
+      responseMsg.style.color = "lime";
+      form.reset();
+    } catch (err) {
+      responseMsg.textContent = "Failed to add recipe.";
+      responseMsg.style.color = "red";
+      console.error(err);
+    }
+  });
+</script>
+{% endblock %}

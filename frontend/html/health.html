@@ -1,0 +1,54 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="overlay">
+  <section class="section">
+    <h1 class="section-title">Health Tracker</h1>
+    <form id="bmiForm" class="form-card">
+      <input type="number" name="height" placeholder="Height (cm)" required />
+      <input type="number" name="weight" placeholder="Weight (kg)" required />
+      <button type="submit">Calculate BMI</button>
+    </form>
+
+    <div id="bmiResult" class="card" style="display:none;">
+      <h3>Your BMI Result</h3>
+      <p id="bmiValue"></p>
+      <p id="bmiMessage"></p>
+    </div>
+  </section>
+</div>
+
+<script>
+  const form = document.getElementById('bmiForm');
+  const bmiValue = document.getElementById('bmiValue');
+  const bmiMessage = document.getElementById('bmiMessage');
+  const resultCard = document.getElementById('bmiResult');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const height = parseFloat(form.elements['height'].value);
+    const weight = parseFloat(form.elements['weight'].value);
+
+    const bmi = (weight / ((height / 100) ** 2)).toFixed(2);
+    let category = "Normal";
+
+    if (bmi < 18.5) category = "Underweight";
+    else if (bmi >= 25 && bmi < 30) category = "Overweight";
+    else if (bmi >= 30) category = "Obese";
+
+    bmiValue.textContent = `BMI: ${bmi}`;
+    bmiMessage.textContent = `Category: ${category}`;
+    resultCard.style.display = 'block';
+
+    try {
+      await fetch('/health/bmi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ height, weight, bmi })
+      });
+    } catch (err) {
+      console.error("Error saving BMI", err);
+    }
+  });
+</script>
+{% endblock %}

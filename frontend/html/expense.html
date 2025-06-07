@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="overlay">
+  <section class="section">
+    <h1 class="section-title">Expense Tracker</h1>
+    <form id="expenseForm" class="form-card">
+      <input type="text" name="description" placeholder="Expense Description" required />
+      <input type="number" name="amount" placeholder="Amount (₹)" step="0.01" required />
+      <input type="text" name="paidBy" placeholder="Paid By" required />
+      <button type="submit">Add Expense</button>
+    </form>
+
+    <div id="expenseList" class="card" style="margin-top: 2rem;">
+      <h3>Expenses</h3>
+      <ul id="expensesUl"></ul>
+    </div>
+  </section>
+</div>
+
+<script>
+  const expenseForm = document.getElementById('expenseForm');
+  const expensesUl = document.getElementById('expensesUl');
+
+  let expenses = [];
+
+  function renderExpenses() {
+    expensesUl.innerHTML = expenses.length
+      ? expenses.map((e) => `<li><strong>${e.description}</strong>: ₹${e.amount.toFixed(2)} (Paid by: ${e.paidBy})</li>`).join('')
+      : '<li>No expenses added yet.</li>';
+  }
+
+  expenseForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const description = expenseForm.elements['description'].value.trim();
+    const amount = parseFloat(expenseForm.elements['amount'].value);
+    const paidBy = expenseForm.elements['paidBy'].value.trim();
+
+    const expense = { description, amount, paidBy };
+
+    try {
+      const res = await fetch('/expense/add', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(expense),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        expenses.push(expense);
+        renderExpenses();
+        expenseForm.reset();
+      } else {
+        alert(data.error || 'Failed to add expense');
+      }
+    } catch (err) {
+      alert('Network error. Try again.');
+      console.error(err);
+    }
+  });
+
+  renderExpenses();
+</script>
+{% endblock %}

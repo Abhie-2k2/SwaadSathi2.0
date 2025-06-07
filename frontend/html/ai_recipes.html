@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="overlay">
+  <section class="section">
+    <h1 class="section-title">AI Recipe Generator</h1>
+    <form id="aiForm" class="form-card">
+      <input type="text" name="ingredients" placeholder="Enter ingredients (comma-separated)" required />
+      <button type="submit">Generate Recipe</button>
+    </form>
+
+    <div id="resultCard" class="card" style="display:none;">
+      <h3 id="recipeTitle">Your AI Recipe</h3>
+      <p id="recipeOutput">Generating...</p>
+    </div>
+  </section>
+</div>
+
+<script>
+  const form = document.getElementById('aiForm');
+  const output = document.getElementById('recipeOutput');
+  const resultCard = document.getElementById('resultCard');
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ingredients = form.elements['ingredients'].value.trim();
+    
+    if (!ingredients) return;
+
+    output.textContent = 'Generating...';
+    resultCard.style.display = 'block';
+
+    try {
+      const res = await fetch('/ai/recipe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ingredients })
+      });
+
+      if (!res.ok) throw new Error('Network response not ok');
+
+      const data = await res.json();
+      output.textContent = data.recipe || 'No recipe found.';
+    } catch (err) {
+      output.textContent = 'Error generating recipe.';
+      console.error(err);
+    }
+  });
+</script>
+{% endblock %}

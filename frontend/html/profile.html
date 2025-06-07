@@ -1,0 +1,98 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="overlay">
+  <section class="section">
+    <h1 class="section-title">User Profile</h1>
+
+    <form id="profileForm" class="form-card">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" placeholder="Full Name" required />
+
+      <label for="email">Email (read-only)</label>
+      <input type="email" id="email" name="email" readonly />
+
+      <label for="age">Age</label>
+      <input type="number" id="age" name="age" min="0" max="120" placeholder="Age" />
+
+      <label for="gender">Gender</label>
+      <select id="gender" name="gender">
+        <option value="">Select gender</option>
+        <option value="Male">Male</option>
+        <option value="Female">Female</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <button type="submit">Update Profile</button>
+    </form>
+
+    <div id="message" style="margin-top: 1rem; color: var(--accent-color);"></div>
+  </section>
+</div>
+
+<script>
+  const profileForm = document.getElementById('profileForm');
+  const messageDiv = document.getElementById('message');
+
+  // Fetch profile data from backend
+  async function loadProfile() {
+    try {
+      const res = await fetch('/profile/get', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + localStorage.getItem('token') }
+      });
+
+      if (!res.ok) throw new Error('Failed to load profile');
+
+      const data = await res.json();
+
+      document.getElementById('name').value = data.name || '';
+      document.getElementById('email').value = data.email || '';
+      document.getElementById('age').value = data.age !== undefined ? data.age : '';
+      document.getElementById('gender').value = data.gender || '';
+    } catch (error) {
+      console.error(error);
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'Error loading profile.';
+    }
+  }
+
+  // Submit updated profile
+  profileForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    messageDiv.textContent = '';
+
+    const payload = {
+      name: profileForm.name.value.trim(),
+      age: Number(profileForm.age.value) || null,
+      gender: profileForm.gender.value
+    };
+
+    try {
+      const res = await fetch('/profile/update', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + localStorage.getItem('token')
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || 'Failed to update profile');
+      }
+
+      messageDiv.style.color = 'var(--accent-color)';
+      messageDiv.textContent = 'Profile updated successfully!';
+    } catch (error) {
+      console.error(error);
+      messageDiv.style.color = 'red';
+      messageDiv.textContent = 'Error updating profile.';
+    }
+  });
+
+  // Load profile on page load
+  loadProfile();
+</script>
+{% endblock %}

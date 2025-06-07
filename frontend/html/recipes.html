@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="overlay">
+  <section class="section">
+    <h1 class="section-title">Your Recipes</h1>
+    <div id="recipes-list" class="card-grid"></div>
+  </section>
+</div>
+
+<script>
+  // Fetch recipes from backend API and render them
+  async function fetchRecipes() {
+    try {
+      const res = await fetch('/recipes/');
+      if (!res.ok) throw new Error('Network response was not ok');
+
+      const data = await res.json();
+
+      const container = document.getElementById('recipes-list');
+
+      if (!data.length) {
+        container.innerHTML = "<p>No recipes found.</p>";
+        return;
+      }
+
+      // Create recipe cards HTML
+      container.innerHTML = data.map(recipe => `
+        <div class="card">
+          <img src="${recipe.image_url || '/static/img/default.png'}" alt="${recipe.name}" />
+          <h3>${recipe.name}</h3>
+          <p><strong>Ingredients:</strong> ${recipe.ingredients.join(', ')}</p>
+          <p><strong>Steps:</strong> ${recipe.method.slice(0, 100)}${recipe.method.length > 100 ? '...' : ''}</p>
+        </div>
+      `).join('');
+    } catch (err) {
+      console.error("Error loading recipes:", err);
+      document.getElementById('recipes-list').innerHTML = "<p>Error loading recipes.</p>";
+    }
+  }
+
+  // Call fetch on page load
+  fetchRecipes();
+</script>
+{% endblock %}
